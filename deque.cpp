@@ -5,10 +5,10 @@
  */
 
 template <class T>
-Deque<T>::Deque(){
-
-/* YOUR CODE HERE! */
-
+Deque<T>::Deque()
+{
+    n1 = 0; //leftmost index 
+    n2 = -1; //rightmost index
 }
 
 /**
@@ -19,9 +19,8 @@ Deque<T>::Deque(){
 template <class T>
 void Deque<T>::pushR(T newItem)
 {
-    /**
-     * @todo Your code here!
-     */
+    data.push_back(newItem);
+    n2++;
 }
 
 /**
@@ -35,9 +34,25 @@ void Deque<T>::pushR(T newItem)
 template <class T>
 T Deque<T>::popL()
 {
-    /**
-     * @todo Your code here! 
-     */
+    T toReturn = peekL();
+    n1++;
+    if (isEmpty()) {
+        data.resize(0);
+        n1 = 0;
+        n2 = -1;
+    } else if (n2-n1 <= n1-1) {
+        vector<T> copy;
+        for (int i = n1; i <= n2; i++) {
+            copy.push_back(data.at(i));
+        }
+        data.resize(copy.size());
+        for (int i = 0; i < data.size(); i++) {
+            data.at(i) = copy.at(i);
+        }
+        n1 = 0;
+        n2 = data.size() - 1;
+    }
+    return toReturn;
 }
 /**
  * Removes the object at the right of the Deque, and returns it to the
@@ -48,9 +63,22 @@ T Deque<T>::popL()
 template <class T>
 T Deque<T>::popR()
 {
-    /**
-     * @todo Your code here! You will need to replace the following line.
-     */
+    T toReturn = peekR();
+    data.pop_back();
+    n2--;
+    if (n2-n1 <= n1-1) {
+        vector<T> copy;
+        for (int i = n1; i <= n2; i++) {
+            copy.push_back(data.at(i));
+        }
+        data.resize(copy.size());
+        for (int i = 0; i < data.size(); i++) {
+            data.at(i) = copy.at(i);
+        }
+        n1 = 0;
+        n2 = data.size() - 1;
+    }
+    return toReturn;
 }
 
 /**
@@ -62,9 +90,7 @@ T Deque<T>::popR()
 template <class T>
 T Deque<T>::peekL()
 {
-    /**
-     * @todo Your code here! 
-     */
+    return data.at(n1);
 }
 
 /**
@@ -76,9 +102,7 @@ T Deque<T>::peekL()
 template <class T>
 T Deque<T>::peekR()
 {
-    /**
-     * @todo Your code here! 
-     */
+    return data.at(n2);
 }
 
 /**
@@ -89,7 +113,5 @@ T Deque<T>::peekR()
 template <class T>
 bool Deque<T>::isEmpty() const
 {
-    /**
-     * @todo Your code here! 
-     */
+    return n2 < n1; //rightindex is less than leftindex
 }
