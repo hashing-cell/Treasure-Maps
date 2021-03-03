@@ -29,7 +29,7 @@ void Stack<T>::push(T newItem)
 template <class T>
 T Stack<T>::pop()
 {
-    return myStack.popR(newItem);
+    return myStack.popR();
     
 }
 
@@ -44,7 +44,7 @@ T Stack<T>::pop()
 template <class T>
 T Stack<T>::peek()
 {
-    return myStack.peekR(newItem);
+    return myStack.peekR();
 }
 
 /**

@@ -72,7 +72,7 @@ T Deque<T>::popR()
             copy.push_back(data.at(i));
         }
         data.resize(copy.size());
-        for (int i = 0; i < data.size(); i++) {
+        for (unsigned int i = 0; i < data.size(); i++) {
             data.at(i) = copy.at(i);
         }
         n1 = 0;
