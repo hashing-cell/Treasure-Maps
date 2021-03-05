@@ -20,6 +20,7 @@ using namespace std;
 decoder::decoder(const PNG & tm, pair<int,int> s)
    :start(s),mapImg(tm) {
 
+
 	PNG EncodedMap = tm;
 	vector<vector<bool>> visited(tm.height(), vector<bool>(tm.width(), false)); 
 	vector<vector<int>> location(tm.height(), vector<int>(tm.width(), -1));
@@ -81,11 +82,13 @@ void decoder::drawRedBox(PNG & im, pair<int,int> point) {
 PNG decoder::renderSolution(){
 	PNG solution = mapImg; 
 	for (unsigned int i = 0; i < pathPts.size(); i++) {
-		RGBAPixel *pixel = mapImg.getPixel(pathPts[i].second, pathPts[i].first);
+		pair<int,int> currPt = pathPts[i];
+		RGBAPixel *pixel = solution.getPixel(currPt.first, currPt.second);
 		pixel->r = 255;
 		pixel->g = 0;
 		pixel->b = 0;
 	}
+	return solution;
 
 }
 
@@ -134,7 +137,6 @@ pair<int,int> decoder::findSpot(){
 
 int decoder::pathLength(){
 	return pathPts.size();
-
 }
 
 	// tests a neighbor (adjacent vertex) to see if it is 
@@ -168,14 +170,5 @@ vector<pair<int,int>> decoder::neighbors(pair<int,int> curr) {
 
 
 bool decoder::compare(RGBAPixel p, int d){
-	int dmod = (d + 1) % 64;
-
-	unsigned char redEncoding = (dmod >> 4) & 0x3; 
-	unsigned char greenEncoding = (dmod >> 2) & 0x3;
-	unsigned char blueEncoding = dmod & 0x3;
-	bool isSameRed = (p.r & 0xFC) == redEncoding;
-	bool isSameGreen = (p.g & 0xFC) == greenEncoding;
-	bool isSameBlue = (p.b & 0xFC) == blueEncoding;
-	return isSameRed && isSameGreen && isSameBlue;
-
+	return ((p.r % 4) * 16 + (p.g % 4) * 4 + (p.b % 4)) == (d + 1) % 64;
 }
