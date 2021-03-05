@@ -9,82 +9,130 @@ treasureMap::treasureMap(const PNG & baseim, const PNG & mazeim, pair<int,int> s
 	maze = mazeim;
 }
 
+	// changes the pixel at position loc to consist of colour channel
+    // values which are 50% of their original. Note that because of 
+    // our encoding scheme which essentially invalidates the lower
+    // order bits, you should compute each value as 2*(x/4), where
+    // x is the integer value of a colour channel.
+
 void treasureMap::setGrey(PNG & im, pair<int,int> loc){
-
-/* YOUR CODE HERE */
-
+	RGBAPixel *pixel = im.getPixel(loc.first, loc.second);
+	pixel->r = 2*(pixel->r/4);
+	pixel->g = 2*(pixel->g/4);
+	pixel->b = 2*(pixel->b/4);
 }
 
 void treasureMap::setLOB(PNG & im, pair<int,int> loc, int d){
-
-/* YOUR CODE HERE */
-
+	int dmod = d % 64;
+	RGBAPixel *pixel = im.getPixel(loc.first, loc.second);
+	//not inlined for readabilty
+	unsigned char redEncoding = (dmod >> 4) & 0x3; 
+	unsigned char greenEncoding = (dmod >> 2) & 0x3;
+	unsigned char blueEncoding = dmod & 0x3; 
+	pixel->r = (pixel->r & 0xFC) | redEncoding;
+	pixel->g = (pixel->g & 0xFC) | greenEncoding;
+	pixel->b = (pixel->b & 0xFC) | blueEncoding;
 }
-// draws the entire maze on a copy of the base image inside the low order bits.
-    // in this encoding, each pixel differs by very little from its 
-    // original value. The returned PNG will be visually identical to the base,
-    // but anyone with a decoder can find and solve the maze. (We specify the
-    // computation of the encoded colours in the description of a setLOB function,
-    // below.)
-    //
-    // This function does a "breadth-first" traversal of the maze image, and at each
-    // iteration of the traversal, it encodes the current location as a part of the
-    // maze in a copy of the base image. The algorithm is spelled out carefully
-    // for this function. You will want to adapt it to design solutions
-    // to some of the other functions in this assignment.
-    //
-    // 0. Make a copy of the base image. You will change its pixels corresponding to 
-    //      locations within the maze.
-    // 1. Initialize working vectors: 
-    //      a. Define a 2d vector whose dimensions are the same as the image, and whose 
-    //      values are boolean. Use this vector to indicate whether or not a location
-    //      has been visited by the traversal.
-    //      b. Define a 2d vector whose dimensions are the same as the image, and whose
-    //      values are integers. This structure will be used to store the length of the
-    //      shortest path between the current location and the start location.
-    // 2. Initialize a queue whose purpose is to orchestrate the traversal. As you search
-    //      the maze, you will have to keep a list of locations to explore. The queue maintains
-    //      that list.
-    // 3. For the start location, do the following:
-    //      a. mark the start location as visited (structure in step 1a)
-    //      b. set the distance to the start to be 0 (structure in step 1b)
-    //      c. encode the distance within the start location's lower order bits of the treasure map 
-    //          (structure in step 0)
-    //      d. enqueue the start location. (structure in step 2)
-    // 4. While the queue is not empty:
-    //      a. set the current location, curr, to the value at the front of the queue (and dequeue). 
-    //      b. for each compass neighbor, p, of curr in the order of left, below, right, above:
-    //          i. if p is "good" (defined below) then
-    //              1) mark p's location as visited
-    //              2) set p's distance to the start to be curr's distance, + 1. 
-    //              3) encode the distance in the lower order bits of the treasure map
-    //              4) enqueue p
-    //      
-    // 5. return the image
-PNG treasureMap::renderMap(){
 
-/* YOUR CODE HERE */
+void treasureMap::drawRedBox(PNG & im, pair<int,int> point) {
+	unsigned int rowIndex = point.second - 3 >= 0 ? point.second - 3 : 0;
+	unsigned int colIndex = point.first - 3 >= 0 ? point.first - 3 : 0;
+	unsigned int endRowIndex = (point.second + 3 < im.height()) ? point.second + 3 : im.height() - 1;
+	unsigned int endColIndex = (point.first + 3 < im.width()) ? point.first + 3 : im.width() - 1;
+/*
+	if (rowIndex == 0) {
+		endRowIndex = 6;
+	} else if (endRowIndex == im.height() - 1) {
+		rowIndex = im.height() - 7;
+	}
+
+	if (colIndex == 0) {
+		endColIndex = 6;
+	} else if (endColIndex == im.width() - 1) {
+		colIndex = im.width() - 7;
+	}
+*/
+	int colReset = colIndex;
+	while (rowIndex <= endRowIndex) {
+		while (colIndex <= endColIndex) {
+			RGBAPixel *pixel = im.getPixel(colIndex, rowIndex);
+			pixel->r = 255;
+			pixel->g = 0;
+			pixel->b = 0;
+			colIndex++;
+		}
+		colIndex = colReset;
+		rowIndex++;
+	}
+}
+
+PNG treasureMap::renderMap(){
+	PNG EncodedMap = base;
+	vector<vector<bool>> visited(base.height(), vector<bool>(base.width(), false)); 
+	vector<vector<int>> location(base.height(), vector<int>(base.width(), -1));
+	Queue<pair<int,int>> BFStraversal;
+
+	visited[start.second][start.first] = true;
+	location[start.second][start.first] = 0;
+	setLOB(EncodedMap, start, location[start.second][start.first]);
+	BFStraversal.enqueue(start);
+
+	while(!BFStraversal.isEmpty()) {
+		pair<int,int> curr = BFStraversal.dequeue();
+		vector<pair<int,int>> adjacencyList = neighbors(curr);
+		for (unsigned long i = 0; i < adjacencyList.size(); i++) {
+			pair<int,int> adjacentPos = adjacencyList[i]; //For readability, can be inlined if required
+			if (good(visited, curr, adjacentPos)) {
+				visited[adjacentPos.second][adjacentPos.first] = true;
+				location[adjacentPos.second][adjacentPos.first] = location[curr.second][curr.first] + 1;
+				setLOB(EncodedMap, adjacentPos, location[adjacentPos.second][adjacentPos.first]);
+				BFStraversal.enqueue(adjacentPos);
+			}
+		}
+	}
+	return EncodedMap;
 
 }
 
 
 PNG treasureMap::renderMaze(){
+	PNG MazeMap = base;
+	vector<vector<bool>> visited(base.height(), vector<bool>(base.width(), false)); 
+	Queue<pair<int,int>> BFStraversal;
 
-/* YOUR CODE HERE */
+	visited[start.second][start.first] = true;
+	setGrey(MazeMap, start);
+	BFStraversal.enqueue(start);
+
+	while(!BFStraversal.isEmpty()) {
+		pair<int,int> curr = BFStraversal.dequeue();
+		vector<pair<int,int>> adjacencyList = neighbors(curr);
+		for (unsigned long i = 0; i < adjacencyList.size(); i++) {
+			pair<int,int> adjacentPos = adjacencyList[i]; //For readability, can be inlined if required
+			if (good(visited, curr, adjacentPos)) {
+				visited[adjacentPos.second][adjacentPos.first] = true;
+				setGrey(MazeMap, adjacentPos);
+				BFStraversal.enqueue(adjacentPos);
+			}
+		}
+	}
+
+	drawRedBox(MazeMap, start);
+	return MazeMap;
 
 }
 
 bool treasureMap::good(vector<vector<bool>> & v, pair<int,int> curr, pair<int,int> next){
-	/*
-		Can be inlined at the cost of readability (ie. getting the longest return statement ever)
-	*/
 
-	bool isWithinImage = (next.first < base.width()) && (next.first >= 0) && (next.second < base.height()) && (next.second >= 0);
-	bool isVisited = !(v[next.second][next.first]);
-	RGBAPixel *currColour = base.getPixel(curr.first, curr.second);
-	RGBAPixel *nextColour = base.getPixel(next.first, next.second);
+	bool isWithinImage = (next.first < maze.width()) && (next.first >= 0) && (next.second < maze.height()) && (next.second >= 0);
+	if (!isWithinImage) {
+		return false;
+	}
+	bool isNotVisited = !(v[next.second][next.first]);
+	RGBAPixel *currColour = maze.getPixel(curr.first, curr.second);
+	RGBAPixel *nextColour = maze.getPixel(next.first, next.second);
 	bool isSameColour = (*currColour == *nextColour);
-	return isWithinImage && isVisited && isSameColour;
+	return isWithinImage && isNotVisited && isSameColour;
 
 
 }

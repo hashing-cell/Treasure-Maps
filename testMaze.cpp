@@ -65,7 +65,9 @@ TEST_CASE("treasureMap::basic no cycles", "[weight=1][part=treasureMap]")
     solnmazeans.readFromFile("images/solnsnakemaze.png");
     REQUIRE( solnmaze == solnmazeans );
 
+
 }
+
 
 TEST_CASE("decoder::basic cycles", "[weight=1][part=decoder]")
 {

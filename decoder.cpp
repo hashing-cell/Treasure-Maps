@@ -6,7 +6,8 @@ using namespace std;
 decoder::decoder(const PNG & tm, pair<int,int> s)
    :start(s),mapImg(tm) {
 
-/* YOUR CODE HERE */
+   	mapImg = tm;
+   	start = s;
     
 }
 
