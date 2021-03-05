@@ -39,19 +39,7 @@ void treasureMap::drawRedBox(PNG & im, pair<int,int> point) {
 	unsigned int colIndex = point.first - 3 >= 0 ? point.first - 3 : 0;
 	unsigned int endRowIndex = (point.second + 3 < im.height()) ? point.second + 3 : im.height() - 1;
 	unsigned int endColIndex = (point.first + 3 < im.width()) ? point.first + 3 : im.width() - 1;
-/*
-	if (rowIndex == 0) {
-		endRowIndex = 6;
-	} else if (endRowIndex == im.height() - 1) {
-		rowIndex = im.height() - 7;
-	}
 
-	if (colIndex == 0) {
-		endColIndex = 6;
-	} else if (endColIndex == im.width() - 1) {
-		colIndex = im.width() - 7;
-	}
-*/
 	int colReset = colIndex;
 	while (rowIndex <= endRowIndex) {
 		while (colIndex <= endColIndex) {

@@ -95,6 +95,13 @@ private:
     // x is the value of a colour channel.
     void setGrey(PNG & im, pair<int,int> loc);
 
+    /*
+        Draws a 7px by 7px red box on the given image with start as the center of the red box
+        If the start location is near the edge of the image,
+        just draw the existing portion of the square. The start 
+        should be at the center of the square.
+    */
+    void drawRedBox(PNG & im, pair<int,int> point);
 
 // ========= private member variables ================
 
